@@ -1,7 +1,7 @@
 # Competitive Dashboard v1
 
 ## What this is
-A polished React + Vite version of your competitive analysis dashboard that does not rely on canvas preview.
+A v1 prototype React + Vite version of a marketing competitive analysis dashboard
 
 ## How to run
 1. Open this folder in VS Code
