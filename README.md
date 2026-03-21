@@ -1,4 +1,4 @@
-# Competitive Dashboard Polished
+# Competitive Dashboard v1
 
 ## What this is
 A polished React + Vite version of your competitive analysis dashboard that does not rely on canvas preview.
