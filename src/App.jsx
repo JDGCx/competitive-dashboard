@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { jsPDF } from "jspdf";
+import { Analytics } from "@vercel/analytics/react";
 import {
   ArrowDown,
   ArrowUp,
@@ -1001,6 +1002,7 @@ export default function App() {
           </div>
         ) : null}
       </div>
+      <Analytics />
     </div>
   );
 }
