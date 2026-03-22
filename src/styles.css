@@ -64,12 +64,9 @@ textarea {
   display: flex;
   flex-direction: column;
   padding: 24px;
-  position: fixed;
   width: 240px;
   height: 100vh;
   overflow-y: auto;
-  left: 0;
-  top: 0;
 }
 
 .sidebar-title {
@@ -119,9 +116,10 @@ textarea {
 }
 
 .main-content {
-  margin-left: 240px;
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-width: 0;
 }
 
 .top-bar {
