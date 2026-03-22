@@ -817,7 +817,7 @@ export default function App() {
             </Surface>
 
             <div className="score-card-grid">
-              {analysis.entityTotals.map((entity) => <StatCard key={entity.id} label={entity.type === "client" ? "Your Score" : "Competitor Avg"} value={round(entity.total, 2)} helper={entity.name} />)}
+              {analysis.entityTotals.map((entity) => <StatCard key={entity.id} label={entity.type === "client" ? "Client Score" : "Competitor Avg"} value={round(entity.total, 2)} helper={entity.name} />)}
             </div>
 
             <Surface className="surface-pad">
@@ -892,7 +892,7 @@ export default function App() {
                     <tr>
                       <th>Category</th>
                       <th>Factor</th>
-                      <th>Your Score</th>
+                      <th>Client Score</th>
                       <th>Competitor Avg</th>
                       <th>Weight</th>
                       <th>Weighted Gap</th>
