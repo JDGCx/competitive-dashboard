@@ -802,69 +802,100 @@ export default function App() {
         {activeTab === "analysis" ? (
           <div className="analysis-grid">
             <Surface className="surface-pad">
-              <SectionHeader title="How to Read Delta" subtitle="Use these rules to understand what the score gaps actually mean." />
-              <div className="explainer-grid" style={{ marginTop: 20 }}>
-                <InfoPanel title="1. Basic Delta" icon={Info}><p>Delta = average competitor score minus client score.</p><p>Example: if competitors average 4 and the client is 3, delta is +1.</p></InfoPanel>
-                <InfoPanel title="2. What the Sign Means" icon={Info}><p>Positive delta means competitors are ahead.</p><p>Negative delta means the client is ahead.</p></InfoPanel>
-                <InfoPanel title="3. Weighted Delta" icon={Info}><p>Weighted delta = delta × weight.</p><p>This makes important factors count more than low-priority ones.</p></InfoPanel>
+              <SectionHeader title="Understanding the Analysis" subtitle="How to interpret competitive gaps and advantages." />
+              <div className="delta-explainer" style={{ marginTop: 16 }}>
+                <p style={{ margin: "0 0 10px", fontSize: 14, color: "var(--text-secondary)" }}>
+                  <strong>Delta</strong> = average competitor score minus client score.
+                  <br />
+                  <strong>Positive delta</strong> means competitors are ahead.
+                  <br />
+                  <strong>Negative delta</strong> means the client is ahead.
+                  <br />
+                  <strong> Weighted delta</strong> multiplies the gap by factor importance. More important factors have bigger impacts.
+                </p>
               </div>
             </Surface>
 
             <div className="score-card-grid">
-              {analysis.entityTotals.map((entity) => <StatCard key={entity.id} label={entity.type === "client" ? "Client Score" : "Competitor Score"} value={round(entity.total, 2)} helper={entity.name} />)}
-            </div>
-
-            <div className="insight-grid">
-              <Surface className="surface-pad">
-                <SectionHeader title="Top Threat Factors" subtitle="Positive weighted delta means competitors outperform the client." />
-                <div className="insight-stack" style={{ marginTop: 20 }}>
-                  {analysis.threatRanking.slice(0, 8).map((factor) => (
-                    <div key={factor.id} className="insight-card">
-                      <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "flex-start" }}>
-                        <div>
-                          <Chip>{factor.category}</Chip>
-                          <div style={{ fontWeight: 700, marginTop: 10 }}>{factor.name}</div>
-                        </div>
-                        <Chip tone={factor.weightedDelta > 0 ? "threat" : "opportunity"}>{round(factor.weightedDelta, 3)}</Chip>
-                      </div>
-                      <div className="stat-helper" style={{ marginTop: 12 }}>Client: {round(factor.clientScore, 2)} · Avg. competitors: {round(factor.avgCompetitorScore, 2)} · Weight: {project.autoNormaliseWeights ? `${round(factor.weightValue * 100, 1)}%` : round(factor.weightValue, 2)}</div>
-                    </div>
-                  ))}
-                </div>
-              </Surface>
-
-              <Surface className="surface-pad">
-                <SectionHeader title="Top Opportunity Factors" subtitle="Negative weighted delta means the client is ahead." />
-                <div className="insight-stack" style={{ marginTop: 20 }}>
-                  {analysis.opportunityRanking.slice(0, 8).map((factor) => (
-                    <div key={factor.id} className="insight-card">
-                      <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "flex-start" }}>
-                        <div>
-                          <Chip>{factor.category}</Chip>
-                          <div style={{ fontWeight: 700, marginTop: 10 }}>{factor.name}</div>
-                        </div>
-                        <Chip tone={factor.weightedDelta < 0 ? "opportunity" : "threat"}>{round(factor.weightedDelta, 3)}</Chip>
-                      </div>
-                      <div className="stat-helper" style={{ marginTop: 12 }}>Client: {round(factor.clientScore, 2)} · Avg. competitors: {round(factor.avgCompetitorScore, 2)} · Weight: {project.autoNormaliseWeights ? `${round(factor.weightValue * 100, 1)}%` : round(factor.weightValue, 2)}</div>
-                    </div>
-                  ))}
-                </div>
-              </Surface>
+              {analysis.entityTotals.map((entity) => <StatCard key={entity.id} label={entity.type === "client" ? "Client Score" : "Competitor Avg"} value={round(entity.total, 2)} helper={entity.name} />)}
             </div>
 
             <Surface className="surface-pad">
-              <SectionHeader title="Detailed Factor Analysis" subtitle="Delta shows the gap before weighting. Weighted delta shows the gap after importance is applied." />
+              <SectionHeader title="Key Competitive Insights" subtitle="Ranked by weighted impact on overall competitiveness." />
+              
+              <div style={{ marginTop: 24 }}>
+                <div style={{ marginBottom: 24 }}>
+                  <h3 style={{ margin: "0 0 12px", fontSize: 15, fontWeight: 700, color: "var(--text)" }}>Biggest Gaps</h3>
+                  <p style={{ margin: "0 0 16px", fontSize: 13, color: "var(--text-secondary)" }}>Factors where competitors are outperforming you (positive weighted delta)</p>
+                  <div className="insight-stack">
+                    {analysis.threatRanking.length > 0 ? (
+                      analysis.threatRanking.slice(0, 5).map((factor) => (
+                        <div key={factor.id} className="insight-card">
+                          <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "flex-start" }}>
+                            <div style={{ flex: 1 }}>
+                              <Chip>{factor.category}</Chip>
+                              <div style={{ fontWeight: 700, marginTop: 10, marginBottom: 8 }}>{factor.name}</div>
+                              <div style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.5 }}>
+                                You: {round(factor.clientScore, 1)} vs Competitors: {round(factor.avgCompetitorScore, 1)} 
+                                {project.autoNormaliseWeights ? ` · Weight: ${round(factor.weightValue * 100, 0)}%` : ""}
+                              </div>
+                            </div>
+                            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+                              <Chip tone="threat" style={{ fontSize: 12, padding: "6px 10px" }}>+{round(Math.abs(factor.weightedDelta), 2)}</Chip>
+                              <div style={{ fontSize: 11, color: "var(--danger-text)", fontWeight: 600 }}>Gap</div>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div style={{ padding: 16, textAlign: "center", color: "var(--text-secondary)", fontSize: 13 }}>No significant gaps detected</div>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 style={{ margin: "0 0 12px", fontSize: 15, fontWeight: 700, color: "var(--text)" }}>Strongest Advantages</h3>
+                  <p style={{ margin: "0 0 16px", fontSize: 13, color: "var(--text-secondary)" }}>Factors where you're outperforming competitors (negative weighted delta)</p>
+                  <div className="insight-stack">
+                    {analysis.opportunityRanking.length > 0 ? (
+                      analysis.opportunityRanking.slice(0, 5).map((factor) => (
+                        <div key={factor.id} className="insight-card">
+                          <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "flex-start" }}>
+                            <div style={{ flex: 1 }}>
+                              <Chip>{factor.category}</Chip>
+                              <div style={{ fontWeight: 700, marginTop: 10, marginBottom: 8 }}>{factor.name}</div>
+                              <div style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.5 }}>
+                                You: {round(factor.clientScore, 1)} vs Competitors: {round(factor.avgCompetitorScore, 1)} 
+                                {project.autoNormaliseWeights ? ` · Weight: ${round(factor.weightValue * 100, 0)}%` : ""}
+                              </div>
+                            </div>
+                            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+                              <Chip tone="opportunity" style={{ fontSize: 12, padding: "6px 10px" }}>-{round(Math.abs(factor.weightedDelta), 2)}</Chip>
+                              <div style={{ fontSize: 11, color: "var(--success-text)", fontWeight: 600 }}>Advantage</div>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div style={{ padding: 16, textAlign: "center", color: "var(--text-secondary)", fontSize: 13 }}>No significant advantages detected</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </Surface>
+
+            <Surface className="surface-pad">
+              <SectionHeader title="Detailed Factor Analysis" subtitle="Complete breakdown including unweighted delta." />
               <div className="table-wrap">
                 <table className="table">
                   <thead>
                     <tr>
                       <th>Category</th>
                       <th>Factor</th>
-                      <th>Client</th>
-                      <th>Avg. Competitors</th>
+                      <th>Client Score</th>
+                      <th>Competitor Avg</th>
                       <th>Weight</th>
-                      <th>Delta</th>
-                      <th>Weighted Delta</th>
+                      <th>Weighted Gap</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -872,11 +903,12 @@ export default function App() {
                       <tr key={factor.id}>
                         <td>{factor.category}</td>
                         <td>{factor.name}</td>
-                        <td>{round(factor.clientScore, 2)}</td>
-                        <td>{round(factor.avgCompetitorScore, 2)}</td>
-                        <td>{project.autoNormaliseWeights ? `${round(factor.weightValue * 100, 1)}%` : round(factor.weightValue, 2)}</td>
-                        <td>{round(factor.delta, 2)}</td>
-                        <td style={{ fontWeight: 700, color: factor.weightedDelta > 0 ? "#be123c" : factor.weightedDelta < 0 ? "#047857" : "#334155" }}>{round(factor.weightedDelta, 3)}</td>
+                        <td>{round(factor.clientScore, 1)}</td>
+                        <td>{round(factor.avgCompetitorScore, 1)}</td>
+                        <td>{project.autoNormaliseWeights ? `${round(factor.weightValue * 100, 0)}%` : round(factor.weightValue, 2)}</td>
+                        <td style={{ fontWeight: 700, color: factor.weightedDelta > 0.01 ? "var(--danger-text)" : factor.weightedDelta < -0.01 ? "var(--success-text)" : "var(--muted-secondary)" }}>
+                          {factor.weightedDelta > 0 ? "+" : ""}{round(factor.weightedDelta, 2)}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
