@@ -4,9 +4,10 @@
   --surface-elevated: #243042;
   --surface-muted: #111827;
   --border: #374151;
-  --text: #E5E7EB;
+  --text: #F3F4F6;
+  --text-secondary: #D1D5DB;
   --muted: #9CA3AF;
-  --muted-secondary: #6B7280;
+  --muted-secondary: #9CA3AF;
   --primary: #6366F1;
   --primary-hover: #4F46E5;
   --danger-bg: #7F1D1D;
@@ -40,6 +41,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
+  line-height: 1.5;
 }
 
 button,
@@ -121,9 +123,16 @@ textarea {
 .hero-copy {
   margin: 8px 0 0;
   max-width: 800px;
-  color: var(--muted-secondary);
+  color: var(--text-secondary);
   line-height: 1.6;
   font-size: 15px;
+}
+
+.section-copy {
+  margin: 6px 0 0;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  font-size: 14px;
 }
 
 .header-actions {
@@ -236,7 +245,7 @@ textarea {
 
 .stat-helper {
   margin-top: 8px;
-  color: var(--muted-secondary);
+  color: var(--text-secondary);
   font-size: 13px;
   line-height: 1.4;
 }
@@ -335,11 +344,12 @@ textarea {
 .input {
   width: 100%;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 8px;
   padding: 10px 12px;
   background: var(--surface-muted);
   color: var(--text);
   font-size: 14px;
+  line-height: 1.5;
 }
 
 .field:focus,
@@ -369,13 +379,16 @@ textarea {
   gap: 12px;
 }
 
-.entity-row,
-.factor-row-card,
 .insight-card {
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px;
+  border-radius: 10px;
+  padding: 14px;
   background: var(--surface-elevated);
+  transition: background-color 0.15s ease;
+}
+
+.insight-card:hover {
+  background-color: rgba(99, 102, 241, 0.05);
 }
 
 .entity-row {
@@ -458,10 +471,41 @@ textarea {
   border-bottom: none;
 }
 
+.table tbody tr {
+  transition: background-color 0.1s ease;
+}
+
+.table tbody tr:hover {
+  background-color: rgba(99, 102, 241, 0.08);
+}
+
 .order-cell {
   display: flex;
+  gap: 8px;
   align-items: center;
-  gap: 10px;
+}
+
+.order-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.order-controls .icon-button {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  opacity: 0.6;
+  transition: 0.15s ease;
+}
+
+.order-controls .icon-button:hover {
+  opacity: 1;
+  background: rgba(99, 102, 241, 0.15);
+  border-color: transparent;
 }
 
 .order-controls {
@@ -616,6 +660,16 @@ textarea {
 
 .hidden-input {
   display: none;
+}
+
+.delta-explainer {
+  color: var(--text-secondary);
+  line-height: 1.7;
+  font-size: 14px;
+}
+
+.delta-explainer p {
+  margin: 0;
 }
 
 @media (max-width: 1100px) {

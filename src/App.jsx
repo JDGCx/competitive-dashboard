@@ -804,9 +804,14 @@ export default function App() {
             <Surface className="surface-pad">
               <SectionHeader title="Understanding the Analysis" subtitle="How to interpret competitive gaps and advantages." />
               <div className="delta-explainer" style={{ marginTop: 16 }}>
-                <p style={{ margin: "0 0 10px", fontSize: 14, color: "var(--muted-secondary)" }}>
-                  <strong>Delta</strong> = average competitor score minus client score. A <strong>positive delta</strong> means competitors are ahead; <strong>negative delta</strong> means you're ahead. 
-                  <strong> Weighted delta</strong> multiplies the gap by factor importance—more important factors drive bigger impacts.
+                <p style={{ margin: "0 0 10px", fontSize: 14, color: "var(--text-secondary)" }}>
+                  <strong>Delta</strong> = average competitor score minus client score.
+                  <br />
+                  <strong>Positive delta</strong> means competitors are ahead.
+                  <br />
+                  <strong>Negative delta</strong> means the client is ahead.
+                  <br />
+                  <strong> Weighted delta</strong> multiplies the gap by factor importance. More important factors have bigger impacts.
                 </p>
               </div>
             </Surface>
@@ -821,7 +826,7 @@ export default function App() {
               <div style={{ marginTop: 24 }}>
                 <div style={{ marginBottom: 24 }}>
                   <h3 style={{ margin: "0 0 12px", fontSize: 15, fontWeight: 700, color: "var(--text)" }}>Biggest Gaps</h3>
-                  <p style={{ margin: "0 0 16px", fontSize: 13, color: "var(--muted-secondary)" }}>Factors where competitors are outperforming you (positive weighted delta)</p>
+                  <p style={{ margin: "0 0 16px", fontSize: 13, color: "var(--text-secondary)" }}>Factors where competitors are outperforming you (positive weighted delta)</p>
                   <div className="insight-stack">
                     {analysis.threatRanking.length > 0 ? (
                       analysis.threatRanking.slice(0, 5).map((factor) => (
@@ -830,7 +835,7 @@ export default function App() {
                             <div style={{ flex: 1 }}>
                               <Chip>{factor.category}</Chip>
                               <div style={{ fontWeight: 700, marginTop: 10, marginBottom: 8 }}>{factor.name}</div>
-                              <div style={{ fontSize: 13, color: "var(--muted-secondary)", lineHeight: 1.5 }}>
+                              <div style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.5 }}>
                                 You: {round(factor.clientScore, 1)} vs Competitors: {round(factor.avgCompetitorScore, 1)} 
                                 {project.autoNormaliseWeights ? ` · Weight: ${round(factor.weightValue * 100, 0)}%` : ""}
                               </div>
@@ -843,14 +848,14 @@ export default function App() {
                         </div>
                       ))
                     ) : (
-                      <div style={{ padding: 16, textAlign: "center", color: "var(--muted-secondary)", fontSize: 13 }}>No significant gaps detected</div>
+                      <div style={{ padding: 16, textAlign: "center", color: "var(--text-secondary)", fontSize: 13 }}>No significant gaps detected</div>
                     )}
                   </div>
                 </div>
 
                 <div>
                   <h3 style={{ margin: "0 0 12px", fontSize: 15, fontWeight: 700, color: "var(--text)" }}>Strongest Advantages</h3>
-                  <p style={{ margin: "0 0 16px", fontSize: 13, color: "var(--muted-secondary)" }}>Factors where you're outperforming competitors (negative weighted delta)</p>
+                  <p style={{ margin: "0 0 16px", fontSize: 13, color: "var(--text-secondary)" }}>Factors where you're outperforming competitors (negative weighted delta)</p>
                   <div className="insight-stack">
                     {analysis.opportunityRanking.length > 0 ? (
                       analysis.opportunityRanking.slice(0, 5).map((factor) => (
@@ -859,7 +864,7 @@ export default function App() {
                             <div style={{ flex: 1 }}>
                               <Chip>{factor.category}</Chip>
                               <div style={{ fontWeight: 700, marginTop: 10, marginBottom: 8 }}>{factor.name}</div>
-                              <div style={{ fontSize: 13, color: "var(--muted-secondary)", lineHeight: 1.5 }}>
+                              <div style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.5 }}>
                                 You: {round(factor.clientScore, 1)} vs Competitors: {round(factor.avgCompetitorScore, 1)} 
                                 {project.autoNormaliseWeights ? ` · Weight: ${round(factor.weightValue * 100, 0)}%` : ""}
                               </div>
@@ -872,7 +877,7 @@ export default function App() {
                         </div>
                       ))
                     ) : (
-                      <div style={{ padding: 16, textAlign: "center", color: "var(--muted-secondary)", fontSize: 13 }}>No significant advantages detected</div>
+                      <div style={{ padding: 16, textAlign: "center", color: "var(--text-secondary)", fontSize: 13 }}>No significant advantages detected</div>
                     )}
                   </div>
                 </div>
