@@ -596,379 +596,333 @@ export default function App() {
     }
   };
 
+  // Calculate market position score (average of all entities, weighted)
+  const marketPositionScore = useMemo(() => {
+    if (!client) return 0;
+    const clientTotal = analysis.entityTotals.find((e) => e.id === client.id)?.total || 0;
+    const competitorAvg = analysis.entityTotals.filter((e) => e.type === "competitor").reduce((sum, e) => sum + e.total, 0) / Math.max(competitors.length, 1);
+    return round(clientTotal, 1);
+  }, [analysis, client, competitors]);
+
+  // Generate key insight from top threat
+  const keyInsight = useMemo(() => {
+    if (!analysis.threatRanking.length) return "No competitive insights available";
+    const topThreat = analysis.threatRanking[0];
+    return `${topThreat.name} is the biggest competitive gap`;
+  }, [analysis.threatRanking]);
+
+  // Generate recommended action
+  const recommendedAction = useMemo(() => {
+    if (!analysis.opportunityRanking.length) return "Strengthen your competitive positioning";
+    const topOpportunity = analysis.opportunityRanking[0];
+    return `Improve ${topOpportunity.name} to gain competitive advantage`;
+  }, [analysis.opportunityRanking]);
+
   return (
     <div className="app-shell">
-      <div className="stack-24">
-        <Surface className="header-card">
-          <div className="header-top">
-            <div>
-              <div className="badge">Functional Prototype</div>
-              <h1 className="hero-title">Competitive Analysis Dashboard Builder</h1>
-              <p className="hero-copy">Build weighted marketing competitive analysis projects, adjust factors dynamically, compare the client against competitors, and export a clean PDF report.</p>
-            </div>
-            <div className="header-actions">
-              <button className="button primary" onClick={saveProject}><Save size={16} /> Save Locally</button>
-              <button className="button secondary" onClick={exportJson}><Download size={16} /> Export JSON</button>
-              <button className="button secondary" onClick={() => importInputRef.current?.click()}><Upload size={16} /> Import JSON</button>
-              <button className="button secondary" onClick={exportPdf}><FileText size={16} /> Export PDF</button>
-              <button className="button danger" onClick={resetProject}><RefreshCcw size={16} /> Reset</button>
-              <input ref={importInputRef} type="file" accept="application/json" className="hidden-input" onChange={handleImportJson} />
-            </div>
-          </div>
-          <div className="header-bottom">
-            <div className="stats-grid">
-              <StatCard label="Factors" value={`${project.factors.length} / ${MAX_FACTORS}`} helper="Active scoring factors" />
-              <StatCard label="Competitors" value={competitors.length} helper="Compared against the client" />
-              <StatCard label="Raw Weight Total" value={rawWeightTotal} helper="Before normalisation" />
-              <StatCard label="Weight Mode" value={weightModeLabel} helper="How factor weights are applied" />
-              <StatCard label="Score Scale" value={scoreScaleLabel} helper="Minimum to maximum score" />
-            </div>
-          </div>
-        </Surface>
+      {/* Sidebar */}
+      <div className="sidebar">
+        <div className="sidebar-title">Competitor Intelligence</div>
+        <div className="sidebar-nav">
+          <button className="nav-item" onClick={() => setActiveTab("dashboard")}>Market Overview</button>
+          <button className="nav-item active" onClick={() => setActiveTab("analysis")}>Competitors</button>
+          <button className="nav-item" onClick={() => setActiveTab("setup")}>Gap Analysis</button>
+          <button className="nav-item" onClick={() => setActiveTab("report")}>Reports</button>
+        </div>
+        <div className="sidebar-bottom">
+          <button className="button primary" style={{ width: "100%" }} onClick={exportPdf}><FileText size={16} /> Generate Report</button>
+          <button className="icon-button" title="Settings"><Settings2 size={18} /></button>
+        </div>
+      </div>
 
-        {pdfStatus.message ? <div className={`status-banner ${pdfStatus.state}`}>{pdfStatus.message}</div> : null}
-
-        <div className="tab-bar">
-          <TabButton active={activeTab === "setup"} icon={Settings2} label="Setup" onClick={() => setActiveTab("setup")} />
-          <TabButton active={activeTab === "scoring"} icon={Users} label="Scoring" onClick={() => setActiveTab("scoring")} />
-          <TabButton active={activeTab === "analysis"} icon={BarChart3} label="Analysis" onClick={() => setActiveTab("analysis")} />
-          <TabButton active={activeTab === "report"} icon={FileSearch} label="Report Preview" onClick={() => setActiveTab("report")} />
+      {/* Main Content */}
+      <div className="main-content">
+        {/* Top Bar */}
+        <div className="top-bar">
+          <div className="top-bar-left">
+            <input type="text" className="search-input" placeholder="Search competitors..." />
+          </div>
+          <div className="top-bar-right">
+            <button className="button primary" onClick={addCompetitor}><Plus size={16} /> Add Competitor</button>
+            <button className="icon-button" title="Notifications"><BarChart3 size={18} /></button>
+            <button className="icon-button" title="Help"><Info size={18} /></button>
+          </div>
         </div>
 
-        {activeTab === "setup" ? (
-          <div className="stack-24">
-            <div className="grid-main">
-              <Surface className="surface-pad">
-                <SectionHeader title="Project Setup" subtitle="Configure the project, template, score range, and competitors." />
-                <div className="form-grid">
-                  <div>
-                    <Label>Project Name</Label>
-                    <input className="input" value={project.projectName} onChange={(e) => updateProject((current) => ({ ...current, projectName: e.target.value }))} />
-                  </div>
-                  <div>
-                    <Label>Report Title</Label>
-                    <input className="input" value={project.reportTitle} onChange={(e) => updateProject((current) => ({ ...current, reportTitle: e.target.value }))} />
-                  </div>
-                  <div>
-                    <Label>Template</Label>
-                    <select className="input" value={project.template} onChange={(e) => applyTemplate(e.target.value)}>
-                      <option value="blank">Blank Template</option>
-                      <option value="productMarketing">Product Marketing</option>
-                      <option value="growthMarketing">Growth Marketing</option>
-                      <option value="performanceMarketing">Performance Marketing</option>
-                      <option value="brandMarketing">Brand Marketing</option>
-                      <option value="contentSeo">Content and SEO</option>
-                      <option value="lifecycleCrm">Lifecycle and CRM</option>
-                    </select>
-                  </div>
-                  <div className="toggle-card">
-                    <div>
-                      <div style={{ fontWeight: 700 }}>Auto-Normalise Weights</div>
-                      <div className="section-copy">Keep factor importance scaled automatically.</div>
-                    </div>
-                    <input type="checkbox" checked={project.autoNormaliseWeights} onChange={(e) => updateProject((current) => ({ ...current, autoNormaliseWeights: e.target.checked }))} />
-                  </div>
-                  <div>
-                    <Label>Score Minimum</Label>
-                    <input className="input" type="number" min="1" max="10" value={project.scoreMin} onChange={(e) => updateProject((current) => ({ ...current, scoreMin: clamp(Number(e.target.value) || 1, 1, 10) }))} />
-                  </div>
-                  <div>
-                    <Label>Score Maximum</Label>
-                    <input className="input" type="number" min="1" max="10" value={project.scoreMax} onChange={(e) => updateProject((current) => ({ ...current, scoreMax: clamp(Number(e.target.value) || 5, 1, 10) }))} />
-                  </div>
-                </div>
+        {/* Main Area */}
+        <div className="main-area">
+          {pdfStatus.message ? <div className={`status-banner ${pdfStatus.state}`}>{pdfStatus.message}</div> : null}
 
-                <div style={{ marginTop: 28 }}>
-                  <SectionHeader title="Entities" subtitle="One client and any number of competitors." action={<button className="button secondary" onClick={addCompetitor}><Plus size={16} /> Add Competitor</button>} />
-                  <div className="entities-list" style={{ marginTop: 16 }}>
-                    {project.entities.map((entity) => (
-                      <div key={entity.id} className="entity-row">
-                        <Chip tone={entity.type === "client" ? "client" : "default"}>{titleCase(entity.type)}</Chip>
-                        <input className="input" value={entity.name} onChange={(e) => updateEntityName(entity.id, e.target.value)} />
-                        {entity.type === "competitor" ? <IconButton danger onClick={() => removeEntity(entity.id)} title="Remove competitor"><Trash2 size={16} /></IconButton> : null}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </Surface>
-
-              <div className="stack-24">
-                <Surface className="surface-pad">
-                  <SectionHeader title="Scoring Logic" subtitle="Use these definitions to understand the calculations." />
-                  <div className="info-box" style={{ marginTop: 20 }}>
-                    <p><strong>Threat factor:</strong> Each criterion you want to assess competitively.</p>
-                    <p><strong>Delta:</strong> Average competitor score minus client score.</p>
-                    <p><strong>Positive delta:</strong> Competitors are ahead on that factor.</p>
-                    <p><strong>Negative delta:</strong> The client is ahead on that factor.</p>
-                    <p><strong>Weighted delta:</strong> Delta multiplied by the factor weight, so more important factors matter more.</p>
-                    <p><strong>Top threats:</strong> Factors where competitors outperform the client most after weight is applied.</p>
-                    <p><strong>Opportunities:</strong> Factors where the client is strongest relative to competitors.</p>
-                  </div>
-                </Surface>
-
-                <Surface className="surface-pad">
-                  <InfoPanel title="Quick Summary" icon={Info}>
-                    <div className="key-value">
-                      <div className="key-row"><span>Factors in project</span><strong>{project.factors.length} / {MAX_FACTORS}</strong></div>
-                      <div className="key-row"><span>Competitors</span><strong>{competitors.length}</strong></div>
-                      <div className="key-row"><span>Raw weight total</span><strong>{rawWeightTotal}</strong></div>
-                      <div className="key-row"><span>Weight mode</span><strong>{weightModeLabel}</strong></div>
-                      <div className="key-row"><span>Score scale</span><strong>{scoreScaleLabel}</strong></div>
-                    </div>
-                  </InfoPanel>
-                </Surface>
-              </div>
+          {/* Summary Row */}
+          <div className="summary-row">
+            <div className="summary-card">
+              <div className="summary-card-label">Market Position Score</div>
+              <div className="summary-card-value">{marketPositionScore}</div>
+              <div className="summary-card-change">+2.4% vs last month</div>
             </div>
+            <div className="summary-card">
+              <div className="summary-card-label">Key Insight</div>
+              <div className="summary-card-description">{keyInsight}</div>
+            </div>
+            <div className="summary-card">
+              <div className="summary-card-label">Recommended Action</div>
+              <div className="summary-card-action">{recommendedAction}<span className="priority-tag high">High</span></div>
+            </div>
+          </div>
 
-            <Surface className="surface-pad">
-              <SectionHeader title="Factor Builder" subtitle="Adjust from 1 to 20 factors. Categories, names, descriptions, and weights are fully editable." action={<button className="button secondary" onClick={addFactor} disabled={project.factors.length >= MAX_FACTORS}><Plus size={16} /> Add Factor</button>} />
+          {/* Main Grid */}
+          <div className="main-grid">
+            {/* Left Column - Competitor Matrix */}
+            <div className="competitor-matrix">
+              <div style={{ marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <h3 className="panel-title">Competitor Matrix</h3>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button className="icon-button" title="Filter"><Info size={16} /></button>
+                  <button className="icon-button" title="Export"><Download size={16} /></button>
+                </div>
+              </div>
               <div className="table-wrap">
-                <table className="table">
+                <table className="report-table">
                   <thead>
                     <tr>
-                      <th>Order</th>
-                      <th>Category</th>
-                      <th>Factor</th>
-                      <th>Description</th>
-                      <th>Weight</th>
-                      <th>Normalised</th>
-                      <th>Actions</th>
+                      <th>Entity</th>
+                      <th>Score</th>
+                      <th>Status</th>
+                      <th>Factors</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {project.factors.map((factor, index) => (
-                      <tr key={factor.id}>
-                        <td>
-                          <div className="order-cell">
-                            <span>{index + 1}</span>
-                            <div className="order-controls">
-                              <IconButton onClick={() => moveFactor(factor.id, "up")} title="Move up"><ArrowUp size={14} /></IconButton>
-                              <IconButton onClick={() => moveFactor(factor.id, "down")} title="Move down"><ArrowDown size={14} /></IconButton>
-                            </div>
-                          </div>
-                        </td>
-                        <td><input className="input" value={factor.category} onChange={(e) => updateFactor(factor.id, "category", e.target.value)} /></td>
-                        <td><input className="input" value={factor.name} onChange={(e) => updateFactor(factor.id, "name", e.target.value)} /></td>
-                        <td><textarea className="input" value={factor.description} onChange={(e) => updateFactor(factor.id, "description", e.target.value)} style={{ minHeight: 92 }} /></td>
-                        <td><input className="input" type="number" value={factor.weight} onChange={(e) => updateFactor(factor.id, "weight", e.target.value)} /></td>
-                        <td><div className="readout">{project.autoNormaliseWeights ? `${round((normalisedWeights[factor.id] || 0) * 100, 1)}%` : round(normalisedWeights[factor.id] || 0, 2)}</div></td>
-                        <td><IconButton danger onClick={() => removeFactor(factor.id)} title="Remove factor"><Trash2 size={16} /></IconButton></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </Surface>
-          </div>
-        ) : null}
-
-        {activeTab === "scoring" ? (
-          <Surface className="surface-pad">
-            <SectionHeader title="Score Matrix" subtitle="Input scores for the client and each competitor across all active factors." />
-            <div className="table-wrap">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Category</th>
-                    <th>Factor</th>
-                    <th>Weight</th>
-                    {project.entities.map((entity) => <th key={entity.id}>{entity.name}</th>)}
-                  </tr>
-                </thead>
-                <tbody>
-                  {project.factors.map((factor) => (
-                    <tr key={factor.id}>
-                      <td>{factor.category}</td>
-                      <td>
-                        <div style={{ fontWeight: 700 }}>{factor.name}</div>
-                        {factor.description ? <div className="stat-helper">{factor.description}</div> : null}
-                      </td>
-                      <td>{project.autoNormaliseWeights ? `${round((normalisedWeights[factor.id] || 0) * 100, 1)}%` : factor.weight}</td>
-                      {project.entities.map((entity) => (
-                        <td key={entity.id}>
-                          <select className="input score-select" value={project.scores[factor.id]?.[entity.id] ?? project.scoreMin} onChange={(e) => updateScore(factor.id, entity.id, e.target.value)}>
-                            {scoreOptions.map((score) => <option key={score} value={score}>{score}</option>)}
-                          </select>
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Surface>
-        ) : null}
-
-        {activeTab === "analysis" ? (
-          <div className="analysis-grid">
-            <Surface className="surface-pad">
-              <SectionHeader title="How to Read Delta" subtitle="Use these rules to understand what the score gaps actually mean." />
-              <div className="explainer-grid" style={{ marginTop: 20 }}>
-                <InfoPanel title="1. Basic Delta" icon={Info}><p>Delta = average competitor score minus client score.</p><p>Example: if competitors average 4 and the client is 3, delta is +1.</p></InfoPanel>
-                <InfoPanel title="2. What the Sign Means" icon={Info}><p>Positive delta means competitors are ahead.</p><p>Negative delta means the client is ahead.</p></InfoPanel>
-                <InfoPanel title="3. Weighted Delta" icon={Info}><p>Weighted delta = delta × weight.</p><p>This makes important factors count more than low-priority ones.</p></InfoPanel>
-              </div>
-            </Surface>
-
-            <div className="score-card-grid">
-              {analysis.entityTotals.map((entity) => <StatCard key={entity.id} label={entity.type === "client" ? "Client Score" : "Competitor Score"} value={round(entity.total, 2)} helper={entity.name} />)}
-            </div>
-
-            <div className="insight-grid">
-              <Surface className="surface-pad">
-                <SectionHeader title="Top Threat Factors" subtitle="Positive weighted delta means competitors outperform the client." />
-                <div className="insight-stack" style={{ marginTop: 20 }}>
-                  {analysis.threatRanking.slice(0, 8).map((factor) => (
-                    <div key={factor.id} className="insight-card">
-                      <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "flex-start" }}>
-                        <div>
-                          <Chip>{factor.category}</Chip>
-                          <div style={{ fontWeight: 700, marginTop: 10 }}>{factor.name}</div>
-                        </div>
-                        <Chip tone={factor.weightedDelta > 0 ? "threat" : "opportunity"}>{round(factor.weightedDelta, 3)}</Chip>
-                      </div>
-                      <div className="stat-helper" style={{ marginTop: 12 }}>Client: {round(factor.clientScore, 2)} · Avg. competitors: {round(factor.avgCompetitorScore, 2)} · Weight: {project.autoNormaliseWeights ? `${round(factor.weightValue * 100, 1)}%` : round(factor.weightValue, 2)}</div>
-                    </div>
-                  ))}
-                </div>
-              </Surface>
-
-              <Surface className="surface-pad">
-                <SectionHeader title="Top Opportunity Factors" subtitle="Negative weighted delta means the client is ahead." />
-                <div className="insight-stack" style={{ marginTop: 20 }}>
-                  {analysis.opportunityRanking.slice(0, 8).map((factor) => (
-                    <div key={factor.id} className="insight-card">
-                      <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "flex-start" }}>
-                        <div>
-                          <Chip>{factor.category}</Chip>
-                          <div style={{ fontWeight: 700, marginTop: 10 }}>{factor.name}</div>
-                        </div>
-                        <Chip tone={factor.weightedDelta < 0 ? "opportunity" : "threat"}>{round(factor.weightedDelta, 3)}</Chip>
-                      </div>
-                      <div className="stat-helper" style={{ marginTop: 12 }}>Client: {round(factor.clientScore, 2)} · Avg. competitors: {round(factor.avgCompetitorScore, 2)} · Weight: {project.autoNormaliseWeights ? `${round(factor.weightValue * 100, 1)}%` : round(factor.weightValue, 2)}</div>
-                    </div>
-                  ))}
-                </div>
-              </Surface>
-            </div>
-
-            <Surface className="surface-pad">
-              <SectionHeader title="Detailed Factor Analysis" subtitle="Delta shows the gap before weighting. Weighted delta shows the gap after importance is applied." />
-              <div className="table-wrap">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th>Category</th>
-                      <th>Factor</th>
-                      <th>Client</th>
-                      <th>Avg. Competitors</th>
-                      <th>Weight</th>
-                      <th>Delta</th>
-                      <th>Weighted Delta</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {analysis.factors.map((factor) => (
-                      <tr key={factor.id}>
-                        <td>{factor.category}</td>
-                        <td>{factor.name}</td>
-                        <td>{round(factor.clientScore, 2)}</td>
-                        <td>{round(factor.avgCompetitorScore, 2)}</td>
-                        <td>{project.autoNormaliseWeights ? `${round(factor.weightValue * 100, 1)}%` : round(factor.weightValue, 2)}</td>
-                        <td>{round(factor.delta, 2)}</td>
-                        <td style={{ fontWeight: 700, color: factor.weightedDelta > 0 ? "#be123c" : factor.weightedDelta < 0 ? "#047857" : "#334155" }}>{round(factor.weightedDelta, 3)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </Surface>
-          </div>
-        ) : null}
-
-        {activeTab === "report" ? (
-          <div className="stack-24">
-            <Surface className="surface-pad">
-              <div className="section-header">
-                <div>
-                  <h2 className="section-title">Report Preview</h2>
-                  <p className="section-copy">Review the structure before exporting. The PDF uses structured report data, not a screenshot.</p>
-                </div>
-                <button className="button primary" onClick={exportPdf}><FileText size={16} /> Export PDF Now</button>
-              </div>
-            </Surface>
-
-            <div className="report-shell">
-              <Surface className="report-document">
-                <div className="report-section">
-                  <div className="badge">Confidential</div>
-                  <h1 className="hero-title" style={{ fontSize: "2.5rem" }}>{project.reportTitle}</h1>
-                  <p className="hero-copy">Project: {project.projectName}</p>
-                </div>
-
-                <section className="report-section">
-                  <h2 className="report-title">Executive Summary</h2>
-                  <p className="hero-copy">This report benchmarks {client?.name || "the client"} against {competitors.length} competitors across {project.factors.length} weighted factors. Scores are analysed using {project.autoNormaliseWeights ? "normalised" : "manual"} weights to identify the most material competitive threats and the strongest areas of advantage.</p>
-                </section>
-
-                <section className="report-section">
-                  <h2 className="report-title">How to Read Delta</h2>
-                  <div className="info-box">
-                    <p><strong>Delta</strong> is the average competitor score minus the client score.</p>
-                    <p><strong>Positive delta</strong> means competitors are ahead on that factor.</p>
-                    <p><strong>Negative delta</strong> means the client is ahead on that factor.</p>
-                    <p><strong>Weighted delta</strong> means the gap has been multiplied by the factor weight, so more important factors affect the result more strongly.</p>
-                  </div>
-                </section>
-
-                <section className="report-section">
-                  <h2 className="report-title">Overall Weighted Scores</h2>
-                  <ReportTable headers={["Entity", "Type", "Weighted Score"]}>
                     {analysis.entityTotals.map((entity) => (
                       <tr key={entity.id}>
-                        <td>{entity.name}</td>
-                        <td>{titleCase(entity.type)}</td>
-                        <td>{round(entity.total, 2)}</td>
+                        <td>
+                          <div style={{ fontWeight: 600 }}>{entity.name}</div>
+                          <div style={{ fontSize: 12, color: "var(--muted)" }}>{entity.type === "client" ? "Your Company" : "Competitor"}</div>
+                        </td>
+                        <td><div style={{ fontSize: 16, fontWeight: 700 }}>{round(entity.total, 1)}</div></td>
+                        <td>
+                          {entity.type === "client" ? (
+                            <Chip tone="client">Leading</Chip>
+                          ) : entity.total > marketPositionScore ? (
+                            <Chip tone="threat">Ahead</Chip>
+                          ) : (
+                            <Chip tone="default">Behind</Chip>
+                          )}
+                        </td>
+                        <td>{project.factors.length} factors</td>
                       </tr>
                     ))}
-                  </ReportTable>
-                </section>
+                  </tbody>
+                </table>
+              </div>
+            </div>
 
-                <section className="report-section">
-                  <h2 className="report-title">Top Threat Factors</h2>
-                  <ReportTable headers={["Factor", "Category", "Weighted Delta"]}>
-                    {analysis.threatRanking.slice(0, 5).map((factor) => (
-                      <tr key={factor.id}>
-                        <td>{factor.name}</td>
-                        <td>{factor.category}</td>
-                        <td>{round(factor.weightedDelta, 3)}</td>
-                      </tr>
-                    ))}
-                  </ReportTable>
-                </section>
+            {/* Right Column */}
+            <div className="right-column">
+              {/* Gap Analysis */}
+              <div className="gap-panel">
+                <h3 className="panel-title">Gap Analysis</h3>
+                {analysis.threatRanking.slice(0, 3).map((factor, idx) => (
+                  <div key={factor.id} className="gap-item">
+                    <div className="gap-item-title">{idx + 1}. {factor.name}</div>
+                    <div className="gap-item-desc">Gap score: {round(factor.weightedDelta, 2)}</div>
+                  </div>
+                ))}
+                <button className="button secondary" style={{ width: "100%", marginTop: 12 }} onClick={() => setActiveTab("setup")}>View All Gaps →</button>
+              </div>
 
-                <section className="report-section">
-                  <h2 className="report-title">Top Opportunity Factors</h2>
-                  <ReportTable headers={["Factor", "Category", "Weighted Delta"]}>
-                    {analysis.opportunityRanking.slice(0, 5).map((factor) => (
-                      <tr key={factor.id}>
-                        <td>{factor.name}</td>
-                        <td>{factor.category}</td>
-                        <td>{round(factor.weightedDelta, 3)}</td>
-                      </tr>
-                    ))}
-                  </ReportTable>
-                </section>
+              {/* Market Alert */}
+              <div className="market-alert">
+                <div className="alert-header">
+                  <div className="alert-title">Market Alert</div>
+                  <div className="impact-tag">CRITICAL</div>
+                </div>
+                <div className="alert-description">
+                  {analysis.threatRanking.length > 0
+                    ? `${analysis.threatRanking[0].name} represents your biggest competitive vulnerability.`
+                    : "Monitor competitive landscape for changes."}
+                </div>
+              </div>
 
-                <section className="report-section">
-                  <h2 className="report-title">Notes</h2>
-                  <textarea className="input note-box" value={project.notes} onChange={(e) => updateProject((current) => ({ ...current, notes: e.target.value }))} placeholder="Add custom narrative notes for the report here." />
-                </section>
-              </Surface>
+              {/* Recommended Actions */}
+              <div className="actions-list">
+                <h3 className="panel-title">Recommended Actions</h3>
+                {analysis.threatRanking.slice(0, 3).map((factor) => (
+                  <div key={factor.id} className="action-item">
+                    <div className="action-text">Improve {factor.name} to reduce competitive gap</div>
+                    <span className="action-label">High</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        ) : null}
+
+          {/* Settings Tab */}
+          {activeTab === "setup" ? (
+            <div style={{ marginTop: 32 }}>
+              <div className="summary-row" style={{ gridTemplateColumns: "1fr" }}>
+                <div className="summary-card">
+                  <div className="summary-card-label">Project Settings</div>
+                  <div style={{ marginTop: 16, display: "grid", gap: 16 }}>
+                    <div>
+                      <Label>Project Name</Label>
+                      <input className="input" value={project.projectName} onChange={(e) => updateProject((current) => ({ ...current, projectName: e.target.value }))} />
+                    </div>
+                    <div>
+                      <Label>Report Title</Label>
+                      <input className="input" value={project.reportTitle} onChange={(e) => updateProject((current) => ({ ...current, reportTitle: e.target.value }))} />
+                    </div>
+                    <div>
+                      <Label>Template</Label>
+                      <select className="input" value={project.template} onChange={(e) => applyTemplate(e.target.value)}>
+                        <option value="blank">Blank Template</option>
+                        <option value="productMarketing">Product Marketing</option>
+                        <option value="growthMarketing">Growth Marketing</option>
+                        <option value="performanceMarketing">Performance Marketing</option>
+                        <option value="brandMarketing">Brand Marketing</option>
+                        <option value="contentSeo">Content and SEO</option>
+                        <option value="lifecycleCrm">Lifecycle and CRM</option>
+                      </select>
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                      <div>
+                        <Label>Score Min</Label>
+                        <input className="input" type="number" value={project.scoreMin} onChange={(e) => updateProject((current) => ({ ...current, scoreMin: clamp(Number(e.target.value) || 1, 1, 10) }))} />
+                      </div>
+                      <div>
+                        <Label>Score Max</Label>
+                        <input className="input" type="number" value={project.scoreMax} onChange={(e) => updateProject((current) => ({ ...current, scoreMax: clamp(Number(e.target.value) || 5, 1, 10) }))} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ marginTop: 24, display: "grid", gap: 20 }}>
+                <div className="summary-card">
+                  <div className="summary-card-label">Competitors</div>
+                  <div style={{ marginTop: 16, display: "grid", gap: 12 }}>
+                    {project.entities.filter((e) => e.type === "competitor").map((entity) => (
+                      <div key={entity.id} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                        <input className="input" value={entity.name} onChange={(e) => updateEntityName(entity.id, e.target.value)} style={{ flex: 1 }} />
+                        <IconButton danger onClick={() => removeEntity(entity.id)} title="Remove"><Trash2 size={16} /></IconButton>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                  <button className="button primary" onClick={saveProject}><Save size={16} /> Save Locally</button>
+                  <button className="button secondary" onClick={exportJson}><Download size={16} /> Export JSON</button>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                  <button className="button secondary" onClick={() => importInputRef.current?.click()}><Upload size={16} /> Import JSON</button>
+                  <button className="button danger" onClick={resetProject}><RefreshCcw size={16} /> Reset</button>
+                </div>
+                <input ref={importInputRef} type="file" accept="application/json" className="hidden-input" onChange={handleImportJson} />
+              </div>
+            </div>
+          ) : null}
+
+          {/* Report Tab */}
+          {activeTab === "report" ? (
+            <div style={{ marginTop: 32 }}>
+              <div className="summary-card" style={{ marginBottom: 24 }}>
+                <div className="summary-card-label">Report Preview</div>
+                <p className="summary-card-description" style={{ marginTop: 12 }}>Review the structure and export as PDF</p>
+              </div>
+
+              <div className="report-shell">
+                <div className="summary-card" style={{ padding: 32 }}>
+                  <div className="badge">Confidential</div>
+                  <h1 style={{ marginTop: 16, fontSize: 32, fontWeight: 700 }}>{project.reportTitle}</h1>
+                  <p style={{ color: "var(--muted)", marginTop: 8 }}>Project: {project.projectName}</p>
+
+                  <div style={{ marginTop: 32 }}>
+                    <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 12 }}>Executive Summary</h2>
+                    <p style={{ color: "var(--muted)" }}>This report benchmarks {client?.name || "the client"} against {competitors.length} competitors across {project.factors.length} weighted factors. Scores are analysed using {project.autoNormaliseWeights ? "normalised" : "manual"} weights to identify competitive gaps.</p>
+                  </div>
+
+                  <div style={{ marginTop: 32 }}>
+                    <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 12 }}>Overall Weighted Scores</h2>
+                    <div className="table-wrap">
+                      <table className="report-table">
+                        <thead>
+                          <tr>
+                            <th>Entity</th>
+                            <th>Type</th>
+                            <th>Score</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {analysis.entityTotals.map((entity) => (
+                            <tr key={entity.id}>
+                              <td>{entity.name}</td>
+                              <td>{titleCase(entity.type)}</td>
+                              <td>{round(entity.total, 2)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  <div style={{ marginTop: 32 }}>
+                    <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 12 }}>Top Threat Factors</h2>
+                    <div className="table-wrap">
+                      <table className="report-table">
+                        <thead>
+                          <tr>
+                            <th>Factor</th>
+                            <th>Category</th>
+                            <th>Gap</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {analysis.threatRanking.slice(0, 5).map((factor) => (
+                            <tr key={factor.id}>
+                              <td>{factor.name}</td>
+                              <td>{factor.category}</td>
+                              <td>{round(factor.weightedDelta, 3)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  <div style={{ marginTop: 32 }}>
+                    <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 12 }}>Top Opportunity Factors</h2>
+                    <div className="table-wrap">
+                      <table className="report-table">
+                        <thead>
+                          <tr>
+                            <th>Factor</th>
+                            <th>Category</th>
+                            <th>Advantage</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {analysis.opportunityRanking.slice(0, 5).map((factor) => (
+                            <tr key={factor.id}>
+                              <td>{factor.name}</td>
+                              <td>{factor.category}</td>
+                              <td>{round(factor.weightedDelta, 3)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  <div style={{ marginTop: 32 }}>
+                    <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 12 }}>Notes</h2>
+                    <textarea className="input note-box" value={project.notes} onChange={(e) => updateProject((current) => ({ ...current, notes: e.target.value }))} placeholder="Add custom narrative notes for the report here." />
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : null}
+        </div>
       </div>
-    </div>
   );
 }
