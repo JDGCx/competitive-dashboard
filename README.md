@@ -1,7 +1,7 @@
-# Competitive Dashboard v1
+# Competitive Dashboard v1.1
 
 ## What this is
-A v1 prototype React + Vite version of a marketing competitive analysis dashboard
+A v1.1 prototype React + Vite version of a marketing competitive analysis dashboard
 
 ## How to run
 1. Open this folder in VS Code
