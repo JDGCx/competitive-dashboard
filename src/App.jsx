@@ -828,8 +828,8 @@ export default function App() {
                   <h3 style={{ margin: "0 0 12px", fontSize: 15, fontWeight: 700, color: "var(--text)" }}>Biggest Gaps</h3>
                   <p style={{ margin: "0 0 16px", fontSize: 13, color: "var(--text-secondary)" }}>Factors where competitors are outperforming you (positive weighted delta)</p>
                   <div className="insight-stack">
-                    {analysis.threatRanking.length > 0 ? (
-                      analysis.threatRanking.slice(0, 5).map((factor) => (
+                    {analysis.factors.filter((f) => f.weightedDelta > 0).sort((a, b) => b.weightedDelta - a.weightedDelta).slice(0, 5).length > 0 ? (
+                      analysis.factors.filter((f) => f.weightedDelta > 0).sort((a, b) => b.weightedDelta - a.weightedDelta).slice(0, 5).map((factor) => (
                         <div key={factor.id} className="insight-card">
                           <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "flex-start" }}>
                             <div style={{ flex: 1 }}>
@@ -841,7 +841,7 @@ export default function App() {
                               </div>
                             </div>
                             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
-                              <Chip tone="threat" style={{ fontSize: 12, padding: "6px 10px" }}>+{round(Math.abs(factor.weightedDelta), 2)}</Chip>
+                              <Chip tone="threat" style={{ fontSize: 12, padding: "6px 10px" }}>+{round(factor.weightedDelta, 2)}</Chip>
                               <div style={{ fontSize: 11, color: "var(--danger-text)", fontWeight: 600 }}>Gap</div>
                             </div>
                           </div>
@@ -857,8 +857,8 @@ export default function App() {
                   <h3 style={{ margin: "0 0 12px", fontSize: 15, fontWeight: 700, color: "var(--text)" }}>Strongest Advantages</h3>
                   <p style={{ margin: "0 0 16px", fontSize: 13, color: "var(--text-secondary)" }}>Factors where you're outperforming competitors (negative weighted delta)</p>
                   <div className="insight-stack">
-                    {analysis.opportunityRanking.length > 0 ? (
-                      analysis.opportunityRanking.slice(0, 5).map((factor) => (
+                    {analysis.factors.filter((f) => f.weightedDelta < 0).sort((a, b) => Math.abs(b.weightedDelta) - Math.abs(a.weightedDelta)).slice(0, 5).length > 0 ? (
+                      analysis.factors.filter((f) => f.weightedDelta < 0).sort((a, b) => Math.abs(b.weightedDelta) - Math.abs(a.weightedDelta)).slice(0, 5).map((factor) => (
                         <div key={factor.id} className="insight-card">
                           <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "flex-start" }}>
                             <div style={{ flex: 1 }}>
