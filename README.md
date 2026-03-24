@@ -1,16 +1,36 @@
-# Competitive Dashboard v1.1
+# Competitive Analysis Dashboard
 
-## What this is
-A v1.1 prototype React + Vite version of a marketing competitive analysis dashboard
+A lightweight marketing tool to benchmark a product against competitors across key positioning, messaging, and go-to-market factors.
 
-## How to run
-1. Open this folder in VS Code
-2. Open terminal in the folder
-3. Run `npm install`
-4. Run `npm run dev`
-5. Open the local URL shown in the terminal
+## Overview
 
-## Main files
-- `src/App.jsx` → app logic and UI
-- `src/styles.css` → styling
-- `src/main.jsx` → app entry point
+This dashboard allows users to:
+- Define custom evaluation factors (e.g. positioning, messaging, product depth)
+- Assign weightages to reflect importance
+- Score a client and multiple competitors
+- Automatically calculate weighted gaps and advantages
+- Generate a structured PDF report summarising insights
+
+The goal is to make competitive analysis more structured, repeatable, and easier to communicate.
+
+---
+
+## Features
+
+- Adjustable scoring system (1–5 scale)
+- Dynamic weight normalisation
+- Real-time calculation of weighted deltas
+- Identification of:
+  - Biggest competitive gaps
+  - Strongest advantages
+- Exportable PDF report for sharing insights
+
+---
+
+## How to Run Locally
+
+1. Clone the repository
+2. Open the project in VS Code
+3. Install dependencies:
+   ```bash
+   npm install
