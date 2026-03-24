@@ -636,7 +636,7 @@ export default function App() {
         </div>
 
         {activeTab === "setup" ? (
-          <div className="stack-24">
+          <div className="tab-content">
             <div className="grid-main">
               <Surface className="surface-pad">
                 <SectionHeader title="Project Setup" subtitle="Configure the project, template, score range, and competitors." />
@@ -678,7 +678,7 @@ export default function App() {
                   </div>
                 </div>
 
-                <div style={{ marginTop: 28 }}>
+                <div style={{ marginTop: 24 }}>
                   <SectionHeader title="Entities" subtitle="One client and any number of competitors." action={<button className="button secondary" onClick={addCompetitor}><Plus size={16} /> Add Competitor</button>} />
                   <div className="entities-list" style={{ marginTop: 16 }}>
                     {project.entities.map((entity) => (
@@ -763,44 +763,46 @@ export default function App() {
         ) : null}
 
         {activeTab === "scoring" ? (
-          <Surface className="surface-pad">
-            <SectionHeader title="Score Matrix" subtitle="Input scores for the client and each competitor across all active factors." />
-            <div className="table-wrap">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Category</th>
-                    <th>Factor</th>
-                    <th>Weight</th>
-                    {project.entities.map((entity) => <th key={entity.id}>{entity.name}</th>)}
-                  </tr>
-                </thead>
-                <tbody>
-                  {project.factors.map((factor) => (
-                    <tr key={factor.id}>
-                      <td>{factor.category}</td>
-                      <td>
-                        <div style={{ fontWeight: 700 }}>{factor.name}</div>
-                        {factor.description ? <div className="stat-helper">{factor.description}</div> : null}
-                      </td>
-                      <td>{project.autoNormaliseWeights ? `${round((normalisedWeights[factor.id] || 0) * 100, 1)}%` : factor.weight}</td>
-                      {project.entities.map((entity) => (
-                        <td key={entity.id}>
-                          <select className="input score-select" value={project.scores[factor.id]?.[entity.id] ?? project.scoreMin} onChange={(e) => updateScore(factor.id, entity.id, e.target.value)}>
-                            {scoreOptions.map((score) => <option key={score} value={score}>{score}</option>)}
-                          </select>
-                        </td>
-                      ))}
+          <div className="tab-content">
+            <Surface className="surface-pad">
+              <SectionHeader title="Score Matrix" subtitle="Input scores for the client and each competitor across all active factors." />
+              <div className="table-wrap">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Category</th>
+                      <th>Factor</th>
+                      <th>Weight</th>
+                      {project.entities.map((entity) => <th key={entity.id}>{entity.name}</th>)}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Surface>
+                  </thead>
+                  <tbody>
+                    {project.factors.map((factor) => (
+                      <tr key={factor.id}>
+                        <td>{factor.category}</td>
+                        <td>
+                          <div style={{ fontWeight: 700 }}>{factor.name}</div>
+                          {factor.description ? <div className="stat-helper">{factor.description}</div> : null}
+                        </td>
+                        <td>{project.autoNormaliseWeights ? `${round((normalisedWeights[factor.id] || 0) * 100, 1)}%` : factor.weight}</td>
+                        {project.entities.map((entity) => (
+                          <td key={entity.id}>
+                            <select className="input score-select" value={project.scores[factor.id]?.[entity.id] ?? project.scoreMin} onChange={(e) => updateScore(factor.id, entity.id, e.target.value)}>
+                              {scoreOptions.map((score) => <option key={score} value={score}>{score}</option>)}
+                            </select>
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Surface>
+          </div>
         ) : null}
 
         {activeTab === "analysis" ? (
-          <div className="analysis-grid">
+          <div className="tab-content analysis-grid">
             <Surface className="surface-pad">
               <SectionHeader title="Understanding the Analysis" subtitle="How to interpret competitive gaps and advantages." />
               <div className="delta-explainer" style={{ marginTop: 16 }}>
@@ -919,7 +921,7 @@ export default function App() {
         ) : null}
 
         {activeTab === "report" ? (
-          <div className="stack-24">
+          <div className="tab-content">
             <Surface className="surface-pad">
               <div className="section-header">
                 <div>
