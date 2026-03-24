@@ -1,4 +1,4 @@
-# Competitive Analysis Dashboard
+# Competitive Analysis Dashboard v1.2
 
 A lightweight marketing tool to benchmark a product against competitors across key positioning, messaging, and go-to-market factors.
 
