@@ -80,6 +80,8 @@ textarea {
 
 .grid-main .stack-24 {
   padding: 0;
+  gap: 24px;
+  display: grid;
 }
 
 .surface {
@@ -262,7 +264,7 @@ textarea {
 }
 
 .tab-bar {
-  display: inline-flex;
+  display: flex;
   flex-wrap: wrap;
   gap: 0;
   padding: 4px;
@@ -270,6 +272,11 @@ textarea {
   border: 1px solid var(--border);
   border-radius: 10px;
   box-shadow: none;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: calc(100% - 48px);
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .tab-button {
@@ -300,6 +307,7 @@ textarea {
   display: grid;
   grid-template-columns: 1.8fr 1fr;
   gap: 24px;
+  align-items: start;
 }
 
 .surface-pad {
@@ -572,7 +580,7 @@ textarea {
   gap: 24px;
   padding: 24px;
   max-width: 1400px;
-  margin: 0 auto;
+  margin: 20px auto 0;
   width: 100%;
 }
 
