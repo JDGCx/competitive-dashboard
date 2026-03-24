@@ -67,7 +67,7 @@ textarea {
 
 .stack-24 {
   display: grid;
-  gap: 24px;
+  gap: 16px;
   padding: 24px;
 }
 
@@ -272,11 +272,6 @@ textarea {
   border: 1px solid var(--border);
   border-radius: 10px;
   box-shadow: none;
-  max-width: 1400px;
-  margin: 0 auto;
-  width: calc(100% - 48px);
-  margin-left: auto;
-  margin-right: auto;
 }
 
 .tab-button {
@@ -578,10 +573,6 @@ textarea {
 .tab-content {
   display: grid;
   gap: 24px;
-  padding: 24px;
-  max-width: 1400px;
-  margin: 20px auto 0;
-  width: 100%;
 }
 
 .tab-content.analysis-grid {
