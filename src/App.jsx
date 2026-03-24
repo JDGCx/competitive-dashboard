@@ -678,7 +678,7 @@ export default function App() {
                   </div>
                 </div>
 
-                <div style={{ marginTop: 28 }}>
+                <div style={{ marginTop: 24 }}>
                   <SectionHeader title="Entities" subtitle="One client and any number of competitors." action={<button className="button secondary" onClick={addCompetitor}><Plus size={16} /> Add Competitor</button>} />
                   <div className="entities-list" style={{ marginTop: 16 }}>
                     {project.entities.map((entity) => (
