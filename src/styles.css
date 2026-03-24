@@ -567,7 +567,16 @@ textarea {
   min-width: 100px;
 }
 
-.analysis-grid {
+.tab-content {
+  display: grid;
+  gap: 24px;
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.tab-content.analysis-grid {
   display: grid;
   gap: 24px;
 }
